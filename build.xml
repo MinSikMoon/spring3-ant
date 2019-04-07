@@ -1,0 +1,81 @@
+<project name="ant-test" basedir="." default="main">
+
+    <!-- 소스 폴더  -->
+    <property name="src.dir" value="src"/>
+    <property name="src.main.dir" value="${src.dir}/main"/>
+    <property name="src.test.dir" value="${src.dir}/test"/>
+    <property name="src.main.java.dir" value="${src.main.dir}/java"/>
+    <property name="src.test.java.dir" value="${src.test.dir}/java"/>
+
+    <!-- 리소스들 -->
+    <!-- webapp폴더가 곧 컨텍스트 내용이다. -->
+    <property name="webapp.dir" value="${src.main.dir}/webapp"/>
+    <property name="web-inf.dir" value="${webapp.dir}/WEB-INF"/>
+
+    <!-- 라이브러리 위치 -->
+    <property name="lib.dir" value="lib"/>
+
+    <!-- 빌드 타겟 -->
+    <property name="target.dir" value="target"/>
+    <property name="classes.dir" value="${target.dir}/classes"/>
+    <property name="TITLE-PROJECT" value="spring3"/>
+    <property name="report.dir" location="report" />
+    <property name="resources.dir" location="${web-inf.dir}/resources" />
+
+
+    <!-- 1. classpath를 지정한다. 라이브러리  폴더 위치 -->
+    <path id="libpath">
+        <fileset dir="${lib.dir}" includes="**/*.jar"/>
+    </path>
+
+    <!-- 2. 무슨폴더를 클린할 것인가? -->
+    <target name="clean">
+        <delete dir="${target.dir}"/>
+        <delete dir="${report.dir}"/>
+    </target>
+
+    <!-- Create folders -->
+    <target name="init" depends="clean">
+        <mkdir dir="${report.dir}" />
+    </target>
+
+    <!-- 3. 컴파일 : 소스폴더 위치, 클래스들이 만들어질 타겟과, classpathref로 라이브러리 참조폴더 정의해준다. -->
+    <target name="compile" depends="init">
+        <mkdir dir="${classes.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${classes.dir}" classpathref="libpath" encoding="utf-8" includeantruntime="true"/>
+    </target>
+
+
+
+    <!-- 4. war가 어디에 만들어질 것인가? 메인클래스위치도 지정해준다. -->
+    <target name="war" depends="init, clean,compile">
+        <war destfile="${target.dir}/${TITLE-PROJECT}.war">
+            <lib dir="${lib.dir}"/>
+            <classes dir="${classes.dir}"/>
+            <zipfileset dir="${web-inf.dir}" prefix="WEB-INF/"/>
+        </war>
+    </target>
+
+    <!-- 테스팅 : batchtest는 하위 폴더의 패턴에 맞는것 모두 테스트 시켜주는것. -->
+    <target name="test" depends="compile">
+        <junit printsummary="yes" haltonfailure="no">
+            <classpath>
+                <path refid="libpath"/>
+                <pathelement location="${classes.dir}"/>
+                <pathelement location="${resources.dir}"/>
+            </classpath>
+            <formatter type="plain" />
+            <batchtest fork="yes" todir="${report.dir}">
+                <fileset dir="${src.dir}" includes="**/*Test.java"/>
+            </batchtest>
+        </junit>
+    </target>
+
+
+    <!-- 5. war 복사해보기 -->
+    <target name="copy" depends="war">
+        <echo message="Copy ready" />
+        <copy file="${target.dir}/${TITLE-PROJECT}.war" todir="${tomcat-webapps}"/>
+    </target>
+
+</project>

@@ -1,0 +1,4 @@
+report/
+spring3/
+target/
+*.war
